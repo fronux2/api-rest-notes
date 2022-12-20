@@ -4,6 +4,9 @@ const Note = require('./models/Note')
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const notFound = require('./middleware/notFound.js')
+const handleErrors = require('./middleware/handleErrors')
+const usersRouter = require('./controllers/users')
 
 app.use(cors())
 app.use(express.json())
@@ -32,7 +35,7 @@ app.post('/api/notes', (request, response) => {
   })
 })
 
-app.get('/api/notes/:id', (request, response) => {
+app.get('/api/notes/:id', (request, response, next) => {
   const { id } = request.params
 
   Note.findById(id)
@@ -42,7 +45,7 @@ app.get('/api/notes/:id', (request, response) => {
       } else {
         response.status(404).end()
       }
-    })
+    }).catch(err => next(err))
 })
 
 app.delete('/api/notes/:id', (request, response) => {
@@ -53,14 +56,25 @@ app.delete('/api/notes/:id', (request, response) => {
     })
 })
 
-app.use((request, response) => {
-  response.status(404).json({
-    error: 'Not found'
-  })
+app.put('/api/notes/:id', (request, response) => {
+  const { id } = request.params
+  const note = request.body
+  const updatedNoteInfo = {
+    content: note.content,
+    important: note.important
+  }
+
+  Note.findByIdAndUpdate(id, updatedNoteInfo, { new: true })
+    .then(result => {
+      response.json(result)
+    })
 })
 
-const PORT = 3001
+app.use('/api/users', usersRouter)
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+app.use(notFound)
+app.use(handleErrors)
+
+app.listen(process.env.PORT, () => {
+  console.log(`Server running on port ${process.env.PORT}`)
 })

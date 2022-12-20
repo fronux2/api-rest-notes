@@ -1,0 +1,7 @@
+PUT http://127.0.0.1:3001/api/notes/63a1f27741663a59eb1a9684
+Content-Type: application/json
+
+{
+    "content": "Bleach el mejor anime"
+}
+
